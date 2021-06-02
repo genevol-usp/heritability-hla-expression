@@ -1,0 +1,20 @@
+total 302M
+-rw-r--r-- 1 vitor vitor 150M Jun  1 17:34 allchrs.gds
+-rw-r--r-- 1 vitor vitor  27M Jun  1 17:35 allchrs_geuv_eur.gds
+-rw-r--r-- 1 vitor vitor  37M Jun  1 17:35 allchrs_geuv.gds
+-rw-r--r-- 1 vitor vitor  46M Jun  1 19:38 grm_gcta_dataset1.rds
+-rw-r--r-- 1 vitor vitor 1.5M Jun  1 19:44 grm_gcta_dataset2.rds
+-rw-r--r-- 1 vitor vitor 941K Jun  1 19:45 grm_gcta_dataset3.rds
+-rw-r--r-- 1 vitor vitor  35M Jun  1 19:39 grm_wg_dataset1.rds
+-rw-r--r-- 1 vitor vitor 975K Jun  1 19:44 grm_wg_dataset2.rds
+-rw-r--r-- 1 vitor vitor 570K Jun  1 19:45 grm_wg_dataset3.rds
+-rw-r--r-- 1 vitor vitor 2.8K May 20 16:40 ids_geuvadis_EUR.txt
+-rw-r--r-- 1 vitor vitor 3.5K May 20 16:40 ids_geuvadis.txt
+-rw-r--r-- 1 vitor vitor 1.5M Jun  1 17:46 pca_dataset1.rds
+-rw-r--r-- 1 vitor vitor 1.4M Jun  1 17:48 pca_dataset2.rds
+-rw-r--r-- 1 vitor vitor 1.1M Jun  1 17:50 pca_dataset3.rds
+-rw-rw-r-- 1 vitor vitor    0 Jun  1 21:30 README.md
+-rw-r--r-- 1 vitor vitor  54K May 20 16:41 sample_annotation_1000g_tidy.tsv
+-rw-rw-r-- 1 vitor vitor 968K May 20 15:50 sample_annotation_1000G.xlsx
+-rw-r--r-- 1 vitor vitor  13K May 20 16:41 sample_annotation_geuvadis_tidy.tsv
+-rw-rw-r-- 1 vitor vitor 414K May 20 15:50 sample_annotation_geuvadis.txt
