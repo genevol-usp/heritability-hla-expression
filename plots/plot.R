@@ -3,6 +3,7 @@ library(tidytext)
 library(cowplot)
 library(ggsci)
 library(GGally)
+library(ggbeeswarm)
 
 # PCA
 plot_parcoord <- function(dataset) {
@@ -244,7 +245,6 @@ plot_grid(get_legend(grm_plot1),
 ggsave("./grm_diag.png", height = 6)
 
 # Off-diagonal
-
 plot_off_diag <- function(df, m) {
  
     grm_offdiag <- df %>%
@@ -311,4 +311,210 @@ plot_off_2 <- plot_off_diag(grm_all_df, "Weir & Goudet")
 
 plot_grid(plot_off_1, plot_off_2, ncol = 1)
 ggsave("./grm_off.png", width = 10, height = 5)
+
+
+##### plots for presentations
+# p_pres_1 <- grm_2_df %>%
+#     filter(id1 == id2) %>%
+#     ggplot(aes(reorder_within(id1, value, method), value)) +
+#     geom_bar(aes(fill = pop1), stat = "identity", width = 1) +
+#     facet_wrap(~method, scales = "free_x", ncol = 2) +
+#     scale_fill_nejm() +
+#     geom_hline(yintercept = 1L, linetype = 2, size = 1, color = "grey") +
+#     theme_bw() +
+#     theme(panel.grid = element_blank(),
+#           axis.text.x = element_blank(),
+#           axis.line.x = element_blank(),
+#           axis.ticks.x = element_blank(),
+#           axis.title = element_blank()) +
+#     labs(fill = "Population:", title = "Diagonal values")
+# 
+# plot_off_diag <- function(df, m) {
+#     
+#     grm_offdiag <- df %>%
+#         mutate(value = ifelse(id1 == id2, NA, value)) %>%
+#         arrange(method, pop1, pop2, id1, id2) %>%
+#         mutate(id1 = fct_inorder(id1),
+#                id2 = fct_inorder(id2))
+#     
+#     lines_v <- grm_offdiag %>%
+#         group_by(method, pop1) %>%
+#         filter(1:n() == last(1:n())) %>%
+#         ungroup() %>%
+#         select(method, id1, pop1)
+#     
+#     lines_h <- grm_offdiag %>%
+#         group_by(method, pop2) %>%
+#         filter(1:n() == last(1:n())) %>%
+#         ungroup() %>%
+#         select(method, id2, pop2)
+#     
+#     labels_v <- grm_offdiag %>%
+#         group_by(method, pop1) %>%
+#         filter(1:n() == floor(median(1:n()))) %>%
+#         ungroup() %>%
+#         select(method, id1, pop1)
+#     
+#     labels_h <- grm_offdiag %>%
+#         group_by(method, pop2) %>%
+#         filter(1:n() == floor(median(1:n()))) %>%
+#         ungroup() %>%
+#         select(method, id2, pop2)
+#     
+#     ggplot(grm_offdiag) +
+#         geom_tile(aes(id1, id2, fill = value)) +
+#         scale_fill_gradient2(name = "GRM values", 
+#                              breaks = scales::pretty_breaks(5)) +
+#         facet_wrap(~method, scales = "free") +
+#         geom_hline(data = lines_h, aes(yintercept = id2)) +
+#         geom_vline(data = lines_v, aes(xintercept = id1)) +
+#         coord_cartesian(clip = "off") +
+#         geom_text(data = labels_v, aes(x = id1, y = 0, label = pop1), 
+#                   vjust = 1.5, size = 2.5) +
+#         geom_text(data = labels_h, aes(y = id2, x = 0, label = pop2), 
+#                   vjust = -0.5, angle = 90, size = 2.5) +
+#         theme_bw() +
+#         theme(panel.grid = element_blank(),
+#               panel.spacing = unit(1, "lines"),
+#               axis.text = element_blank(),
+#               axis.line = element_blank(),
+#               axis.ticks = element_blank(),
+#               axis.title = element_blank(),
+#               plot.margin = unit(c(1, 0, 1, 1), "lines")) +
+#         labs(title = "Off-diagonal values")
+# }
+# 
+# p_pres_2 <- plot_off_diag(grm_2_df)
+# 
+# 
+# plot_grid(p_pres_1, p_pres_2, ncol = 1)
+# 
+# ggsave("./pres_plot.png", width = 6, height = 4)
+# 
+
+
+# HWE test
+
+hwe_df <- sprintf("/scratch/vitor/chr%s_geuv_eur.hwe", 1:22) %>%
+  map_df(. %>% read_tsv() %>%
+           select(CHR, POS, P_HWE))
+
+hwe_cumul_pos <- hwe_df %>%
+  group_by(CHR) %>%
+  summarise(max_bp = max(POS)) %>% 
+  mutate(bp_add = lag(cumsum(max_bp), default = 0)) %>% 
+  select(CHR, bp_add) %>%
+  ungroup()
+
+hwe_data <- hwe_df %>% 
+  inner_join(hwe_cumul_pos, by = "CHR") %>% 
+  mutate(pos_cumul = POS + bp_add)
+
+axis_set <- hwe_data %>% 
+  group_by(CHR) %>% 
+  summarize(center = median(pos_cumul))
+
+hwe_data_frac <- hwe_data %>%
+  group_by(CHR) %>%
+  sample_frac(., .25) %>%
+  ungroup() %>%
+  arrange(CHR, POS) %>%
+  mutate(CHR = factor(CHR, levels = 1:22))
+
+
+manhattan <- 
+  ggplot(hwe_data_frac, aes(x = pos_cumul, y = -log10(P_HWE), 
+                       color = as_factor(CHR))) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_hline(yintercept = -log10(0.001), linetype = "dashed") + 
+  geom_hline(yintercept = -log10(0.05/nrow(hwe_data)), linetype = "dashed",
+             color = "tomato3") + 
+  scale_x_continuous(label = axis_set$CHR, breaks = axis_set$center) +
+  scale_color_manual(values = rep(c("grey", "cornflowerblue"), nrow(axis_set))) +
+  labs(x = NULL, 
+       y = expression(paste("-log"[10], italic(P)))) + 
+  theme_minimal() +
+  theme( 
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust = 0.5)
+  )
+
+ggsave("./hwe_geuv_eur.png", manhattan, width = 10, height = 5)
+
+
+# Expression
+
+hla_expression <- 
+  "/raid/genevol/heritability/data/geuvadis_expression.bed.gz" %>%
+  read_tsv() %>%
+  filter(id == "HLA-A") %>%
+  pivot_longer(-(1:6), names_to = "sampleid") %>%
+  select(sampleid, value)
+
+hla_expression_std <- 
+  "/raid/genevol/heritability/data/geuvadis_expression_std.bed" %>%
+  read_tsv() %>%
+  filter(id == "HLA-A") %>%
+  pivot_longer(-(1:6), names_to = "sampleid") %>%
+  select(sampleid, value)
+
+exp1 <- ggplot(hla_expression, aes(value)) +
+  geom_histogram() +
+  labs(x = NULL, title = "raw")
+
+exp2 <- ggplot(hla_expression_std, aes(value)) +
+  geom_histogram() +
+  labs(x = NULL, title = "standardized")
+
+exp3 <- left_join(hla_expression, hla_expression_std, 
+                by = "sampleid", suffix = c("_raw", "_std")) %>%
+  ggplot(aes(value_raw, value_std)) +
+  geom_point() +
+  labs(x = "Raw", y = "Standardized")
+
+exp_grid_1 <- plot_grid(exp1, exp2, exp3, nrow = 1)
+
+sample_info <- "../data/sample_annotation_geuvadis_tidy.tsv" %>%
+  read_tsv() %>%
+  select(sampleid, population = pop, sex, lab)
+
+expression_df <- 
+  left_join(hla_expression_std, sample_info, by = "sampleid") %>%
+  select(sampleid, population, sex, lab, value)
+
+exp_r2_1 <- ggplot(expression_df, aes(reorder(population, value), value)) +
+  geom_quasirandom(aes(color = population), method = "smiley") +
+  geom_boxplot(fill = NA, outlier.color = NA) +
+  scale_color_nejm() +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "Population", y = "Std expression")
+
+exp_r2_2 <- ggplot(expression_df, aes(reorder(lab, value), value)) +
+  geom_quasirandom(color = "grey", method = "smiley") +
+  geom_boxplot(fill = NA, outlier.color = NA) +
+  scale_x_discrete(labels = function(x) sub("^([^_]+).*$", "\\1", x)) +
+  theme_bw() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 8)) +
+  labs(x = "Lab", y = " ")
+
+exp_r2_3 <- ggplot(expression_df, aes(reorder(sex, value), value)) +
+  geom_quasirandom(aes(color = sex), method = "smiley") +
+  geom_boxplot(fill = NA, outlier.color = NA) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(x = "Sex", y = " ")
+
+exp_grid_2 <- plot_grid(exp_r2_1, exp_r2_2, exp_r2_3, nrow = 1)
+
+exp_grid <- plot_grid(exp_grid_1, NULL, exp_grid_2, 
+                      nrow = 3,
+                      rel_heights = c(.9, .05, 1), 
+                      labels = c("A)", "", "B)"))
+
+ggsave("expression_eda.png", exp_grid, width = 10, height = 5)
 

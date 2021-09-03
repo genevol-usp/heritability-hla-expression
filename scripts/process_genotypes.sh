@@ -7,7 +7,7 @@
 #PBS -t 1-22
 #PBS -N processVCF
 #PBS -j oe
-#PBS -o /home/vitor/heritability-hla-expression/log/$PBS_JOBNAME
+#PBS -o /home/vitor/heritability-hla-expression/log/$PBS_JOBID
 
 CHR=$PBS_ARRAYID
 VCFIN=/raid/genevol/vcf_1000G/phase3_20130502_grch38positions/ALL.chr${CHR}_GRCh38.genotypes.20170504.vcf.gz
@@ -17,7 +17,7 @@ SCRIPTS=/home/vitor/heritability-hla-expression/scripts
 
 bcftools view --genotype ^miss $VCFIN |\
     bcftools view --min-af 0.01:minor - |\
-    vcftools --vcf - --hwe 0.001 --recode --recode-INFO-all --stdout |\
+    vcftools --vcf - --hwe 0.00000005 --recode --recode-INFO-all --stdout |\
     bcftools norm -m +both -o $VCFOUT -
 
 Rscript $SCRIPTS/vcf2gds.R $VCFOUT $GDS 

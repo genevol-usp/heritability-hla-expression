@@ -7,7 +7,7 @@
 #PBS -t 1-22
 #PBS -N processVCF
 #PBS -j oe
-#PBS -o /home/vitor/heritability-hla-expression/log/$PBS_JOBNAME
+#PBS -o /home/vitor/heritability-hla-expression/log/$PBS_JOBIB
 
 CHR=$PBS_ARRAYID
 SAMPLES=/home/vitor/heritability-hla-expression/data/ids_geuvadis_EUR.txt
@@ -19,7 +19,7 @@ SCRIPTS=/home/vitor/heritability-hla-expression/scripts
 bcftools view --samples-file $SAMPLES --force-samples $VCFIN |\
     bcftools view --genotype ^miss - |\
     bcftools view --min-af 0.01:minor - |\
-    vcftools --vcf - --hwe 0.001 --recode --recode-INFO-all --stdout |\
+    vcftools --vcf - --hwe 0.00000005 --recode --recode-INFO-all --stdout |\
     bcftools norm -m +both -o $VCFOUT -
 
 Rscript $SCRIPTS/vcf2gds.R $VCFOUT $GDS 

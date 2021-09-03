@@ -11,3 +11,7 @@ gds_out_3 <- "/home/vitor/heritability-hla-expression/data/allchrs_geuv_eur.gds"
 seqMerge(gds_list_1, gds_out_1)
 seqMerge(gds_list_2, gds_out_2)
 seqMerge(gds_list_3, gds_out_3)
+
+unlink(gds_list_1)
+unlink(gds_list_2)
+unlink(gds_list_3)
